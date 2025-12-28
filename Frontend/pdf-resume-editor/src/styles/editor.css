@@ -1,0 +1,69 @@
+body {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  background: #f4f6f8;
+}
+
+.navbar {
+  height: 60px;
+  background: #0f172a;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+
+.download-btn {
+  background: #22c55e;
+  padding: 8px 14px;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+}
+
+.editor-layout {
+  display: flex;
+  height: calc(100vh - 60px);
+}
+
+.pdf-viewer {
+  width: 50%;
+  background: white;
+  border-right: 1px solid #ddd;
+}
+
+.edit-panel {
+  width: 50%;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.editor-card {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.editor-card h3 {
+  margin-bottom: 10px;
+}
+
+textarea,
+input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.save-btn {
+  width: 100%;
+  background: #2563eb;
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+}
