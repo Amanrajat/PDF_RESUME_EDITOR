@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import PdfViewer from "./components/PdfViewer";
 import PdfOverlayEditor from "./components/PdfOverlayEditor";
+import Navbar from "./components/Navbar";
+
 import {
   uploadResume,
   extractBlocks,
@@ -12,17 +14,17 @@ export default function Editor() {
   const [resumeId, setResumeId] = useState(null);
   const [blocks, setBlocks] = useState([]);
   const [editMode, setEditMode] = useState(false);
+  const [downloadUrl, setDownloadUrl] = useState(null);
 
-  // Selected block index
   const [activeIndex, setActiveIndex] = useState(null);
 
-  // Style controls (SAFE set)
+  // Toolbar state
   const [selectedFont, setSelectedFont] = useState("Helvetica");
   const [selectedColor, setSelectedColor] = useState("#000000");
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
 
-  // Apply style to active block
+  // 🔄 Apply toolbar styles to active block
   useEffect(() => {
     if (activeIndex === null) return;
 
@@ -39,13 +41,13 @@ export default function Editor() {
     });
   }, [selectedFont, selectedColor, isBold, isItalic, activeIndex]);
 
-  // Upload PDF + extract blocks
+  // 📄 Upload + extract
   const handleUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Local preview
     setPdfUrl(URL.createObjectURL(file));
+    setDownloadUrl(null);
 
     try {
       const formData = new FormData();
@@ -61,7 +63,7 @@ export default function Editor() {
         new_text: b.text,
         size: b.size || 12,
         font: b.font || "Helvetica",
-        color: b.color || "#000000",
+        color: "#000000",
         bold: false,
         italic: false,
       }));
@@ -75,7 +77,7 @@ export default function Editor() {
     }
   };
 
-  // Edit text
+  // ✍️ Text edit
   const handleEdit = (index, text) => {
     setBlocks((prev) => {
       const updated = [...prev];
@@ -84,7 +86,7 @@ export default function Editor() {
     });
   };
 
-  // Font size A+ / A-
+  // 🔠 Font size
   const handleResize = (index, delta) => {
     setBlocks((prev) => {
       const updated = [...prev];
@@ -96,15 +98,15 @@ export default function Editor() {
     });
   };
 
-  // SAVE edited PDF  ✅ (CACHE BUSTING HERE)
+  // 💾 Save PDF
   const handleSave = async () => {
     if (!resumeId) return;
 
     try {
       const res = await saveEditedBlocks(resumeId, blocks);
 
-      //  IMPORTANT LINE (CACHE BUST)
       setPdfUrl(res.download_url + "?t=" + Date.now());
+      setDownloadUrl(res.download_url);
 
       setEditMode(false);
       setActiveIndex(null);
@@ -116,7 +118,10 @@ export default function Editor() {
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
-      {/* TOOLBAR */}
+      {/* 🔝 NAVBAR */}
+      <Navbar downloadUrl={downloadUrl} />
+
+      {/* 🧰 TOOLBAR */}
       <div
         style={{
           padding: 8,
@@ -130,17 +135,16 @@ export default function Editor() {
         <input type="file" accept="application/pdf" onChange={handleUpload} />
 
         <button onClick={() => setEditMode((e) => !e)}>
-          {editMode ? "Exit Edit Mode" : "Edit Text"}
+          {editMode ? "Exit Edit" : "Edit Text"}
         </button>
 
         <button onClick={handleSave} disabled={!editMode}>
           Save PDF
         </button>
 
-        {/* FONT */}
         <select
-          value={selectedFont}
           disabled={activeIndex === null}
+          value={selectedFont}
           onChange={(e) => setSelectedFont(e.target.value)}
         >
           <option value="Helvetica">Helvetica</option>
@@ -148,15 +152,13 @@ export default function Editor() {
           <option value="Courier">Courier</option>
         </select>
 
-        {/* COLOR */}
         <input
           type="color"
-          value={selectedColor}
           disabled={activeIndex === null}
+          value={selectedColor}
           onChange={(e) => setSelectedColor(e.target.value)}
         />
 
-        {/* BOLD / ITALIC */}
         <button
           disabled={activeIndex === null}
           onClick={() => setIsBold((b) => !b)}
@@ -173,7 +175,6 @@ export default function Editor() {
           I
         </button>
 
-        {/* FONT SIZE */}
         <button
           disabled={activeIndex === null}
           onClick={() => handleResize(activeIndex, 1)}
@@ -189,23 +190,21 @@ export default function Editor() {
         </button>
       </div>
 
-      {/* PDF + OVERLAY */}
+      {/* 📄 PDF AREA */}
       <div style={{ position: "relative", flex: 1, background: "#ccc" }}>
-        {/* PDF background */}
         <div style={{ pointerEvents: "none" }}>
           <PdfViewer pdfUrl={pdfUrl} />
         </div>
 
-        {/* Clickable overlay (boxes only, text visible on PDF) */}
         {editMode && (
           <PdfOverlayEditor
-            blocks={blocks.filter((b) => b.page === 0)}
+              blocks={blocks.filter(b => b.page === 0 && !b.has_link)}
             activeIndex={activeIndex}
             setActiveIndex={setActiveIndex}
           />
         )}
 
-        {/* RIGHT SIDE EDIT PANEL */}
+        {/* 📝 SIDE EDIT PANEL */}
         {editMode && activeIndex !== null && (
           <div
             style={{

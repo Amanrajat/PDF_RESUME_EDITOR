@@ -4,14 +4,26 @@ export default function PdfOverlayEditor({
   setActiveIndex,
 }) {
   return (
-    <>
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        zIndex: 10,
+        pointerEvents: "none", // 🔥 important
+      }}
+    >
       {blocks.map((block, i) => {
+        if (!block?.bbox) return null;
+
         const [x0, y0, x1, y1] = block.bbox;
 
         return (
           <div
             key={i}
-            onClick={() => setActiveIndex(i)}
+            onClick={(e) => {
+              e.stopPropagation();      // 🔥 click leak fix
+              setActiveIndex(i);        // 🔥 select block
+            }}
             style={{
               position: "absolute",
               left: x0,
@@ -22,13 +34,16 @@ export default function PdfOverlayEditor({
                 activeIndex === i
                   ? "2px solid #007bff"
                   : "1px dashed rgba(0,0,255,0.5)",
-              background: "transparent",
-              zIndex: 2,          
+              background:
+                activeIndex === i
+                  ? "rgba(0,123,255,0.08)"
+                  : "transparent",
               cursor: "pointer",
+              pointerEvents: "auto", // 🔥 ONLY BOX clickable
             }}
           />
         );
       })}
-    </>
+    </div>
   );
 }

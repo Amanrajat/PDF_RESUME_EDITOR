@@ -37,37 +37,21 @@ class SaveEditedBlocksView(APIView):
             resume_id = request.data.get("resume_id")
             blocks = request.data.get("blocks")
 
-            if not resume_id or not blocks:
-                return Response(
-                    {"error": "resume_id or blocks missing"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
             resume = Resume.objects.get(id=resume_id)
 
-            
             filename = f"edited_{uuid.uuid4().hex}.pdf"
-            output_path = os.path.join("media", "output", filename)
+            relative = f"output/{filename}"
+            absolute = os.path.join("media", relative)
 
-           
-            regenerate_pdf(
-                resume.original_pdf.path,
-                output_path,
-                blocks
-            )
+            regenerate_pdf(resume.original_pdf.path, absolute, blocks)
 
-          
-            resume.updated_pdf.name = f"output/{filename}"
+            resume.updated_pdf.name = relative
             resume.save()
 
-            return JsonResponse({
+            return Response({
                 "download_url": request.build_absolute_uri(resume.updated_pdf.url)
-            }, status=200)
+            })
 
         except Exception as e:
-            print(" SAVE ERROR:", str(e))
-            return Response(
-                {"error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
+            print("SAVE ERROR:", e)
+            return Response({"error": str(e)}, status=500)

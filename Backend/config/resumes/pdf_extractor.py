@@ -2,9 +2,10 @@ import fitz
 
 def extract_pdf_blocks(pdf_path):
     doc = fitz.open(pdf_path)
-    blocks_data = []
+    blocks = []
 
     for page_index, page in enumerate(doc):
+        links = page.get_links()
         text_dict = page.get_text("dict")
 
         for block in text_dict["blocks"]:
@@ -12,21 +13,30 @@ def extract_pdf_blocks(pdf_path):
                 continue
 
             for line in block["lines"]:
-                line_text = " ".join(
-                    span["text"] for span in line["spans"]
-                ).strip()
-
-                if not line_text:
+                text = " ".join(span["text"] for span in line["spans"]).strip()
+                if not text:
                     continue
 
-                blocks_data.append({
+                rect = fitz.Rect(line["bbox"])
+
+                # 🔒 Detect link overlap
+                has_link = False
+                for link in links:
+                    if fitz.Rect(link["from"]).intersects(rect):
+                        has_link = True
+                        break
+
+                blocks.append({
                     "page": page_index,
-                    "text": line_text,
-                    "bbox": line["bbox"],   
+                    "text": text,
+                    "bbox": list(rect),
                     "size": line["spans"][0]["size"],
                     "font": line["spans"][0]["font"],
-                    "color": line["spans"][0]["color"],
+                    "color": "#000000",
+                    "bold": False,
+                    "italic": False,
+                    "has_link": has_link
                 })
 
     doc.close()
-    return blocks_data
+    return blocks

@@ -1,0 +1,16 @@
+services:
+  backend:
+    build: ./Backend/config
+    container_name: resume_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./Backend/config/media:/app/media
+
+  frontend:
+    build: ./Frontend/pdf-resume-editor
+    container_name: resume_frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
