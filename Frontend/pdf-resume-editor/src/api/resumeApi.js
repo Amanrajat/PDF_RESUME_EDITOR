@@ -1,29 +1,22 @@
 import axios from "axios";
 
-//  Base backend URL
-const BASE_URL = "http://127.0.0.1:8000/api/resume/";
+// Backend base URL (Render / Local both)
+const BASE_URL = `${import.meta.env.REACT_APP_API_URL}/api/resume/`;
 
 /**
- *  Upload resume (initial upload)
- * Returns: { resume_id, download_url }
+ * Upload resume
  */
 export const uploadResume = async (formData) => {
-  const res = await axios.post(
-    `${BASE_URL}upload/`,
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+  const res = await axios.post(`${BASE_URL}upload/`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return res.data;
 };
 
 /**
- *  Extract all text blocks from PDF
- * Sejda-like editable mode ka base
- * Returns: { blocks: [...] }
+ * Extract text blocks
  */
 export const extractBlocks = async (resumeId) => {
   const res = await axios.post(
@@ -39,27 +32,20 @@ export const extractBlocks = async (resumeId) => {
 };
 
 /**
- *  Save edited blocks & regenerate PDF
- * Returns: { download_url }
+ * Save edited blocks & regenerate PDF
  */
 export const saveEditedBlocks = async (resumeId, blocks) => {
-  const res = await fetch(
-    "http://127.0.0.1:8000/api/resume/save-edits/",
+  const res = await axios.post(
+    `${BASE_URL}save-edits/`,
     {
-      method: "POST",
+      resume_id: resumeId,
+      blocks: blocks,
+    },
+    {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        resume_id: resumeId,
-        blocks: blocks,
-      }),
     }
   );
-
-  if (!res.ok) {
-    throw new Error("Failed to save edited PDF");
-  }
-
-  return await res.json();
+  return res.data;
 };
